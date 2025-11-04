@@ -19,15 +19,15 @@ Tambem usei um pouco de Event-Driven Architecture, para desacoplar as operaçõe
 Frontend não é muito meu forte, mas tentei seguir algum padrão de arquitetura para facilitar a manutenção tambem.
 
 Se eu fosse montar um backlog, seria:
--Colocar um lambda para rotacionar as senhas do secret manager, acionadas por um cron.
--Colocar alertas de falha ou sucesso no Frontend
--Corrigir um bug que está dando com o cache, tanto na criação quanto no cadastro.
--Criar paineis e alertas de erro no Grafana, em situações criticas talvez alertando o Tech Lead via WhatsApp
--Criar um loading mais amigavel e atraente no Frontend.
--Montar testes unitários, de integração, e de stress no backend
--Montar testes e2e, unitários e de componentes
--Melhorar o deploy para enviar para o ambiente de homologação quando a branch development for atualizada.
--Aplicação de gitflow
+- Colocar um lambda para rotacionar as senhas do secret manager, acionadas por um cron.
+- Colocar alertas de falha ou sucesso no Frontend
+- Corrigir um bug que está dando com o cache, tanto na criação quanto no cadastro.
+- Criar paineis e alertas de erro no Grafana, em situações criticas talvez alertando o Tech Lead via WhatsApp
+- Criar um loading mais amigavel e atraente no Frontend.
+- Montar testes unitários, de integração, e de stress no backend
+- Montar testes e2e, unitários e de componentes
+- Melhorar o deploy para enviar para o ambiente de homologação quando a branch development for atualizada.
+- Aplicação de gitflow
 
 Swagger
 
