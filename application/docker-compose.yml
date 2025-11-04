@@ -1,0 +1,147 @@
+version: "3.9"
+services:
+  # Loki deve vir PRIMEIRO pois os outros serviços dependem dele para logging
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+
+  postgredb:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: clients_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clients_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      - loki
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+
+  api:
+    build: .
+    container_name: nest_api
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgredb:
+        condition: service_healthy
+      rabbit:
+        condition: service_started
+      rediscache:
+        condition: service_started
+      loki:
+        condition: service_started
+    environment:
+      DATABASE_HOST: postgredb
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASS: postgres
+      DATABASE_NAME: clients_db
+      RABBITMQ_URI: amqp://rabbit:5672
+      REDIS_HOST: rediscache
+      REDIS_PORT: 6379
+    volumes:
+      - ./backend:/usr/src/app
+    command: npm run start:dev
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+
+  worker:
+    build: .
+    container_name: nest_worker
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://guest:guest@rabbit:5672
+      - RABBITMQ_QUEUE=clients_queue
+    command: npm run start:worker
+    depends_on:
+      postgredb:
+        condition: service_healthy
+      rabbit:
+        condition: service_started
+      loki:
+        condition: service_started
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+
+  rabbit:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      - loki
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+
+  rediscache:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      - loki
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+
+volumes:
+  pgdata:
+  rabbit_data:
+  redis_data:
+  loki_data:
+  grafana_data:

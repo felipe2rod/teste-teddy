@@ -1,0 +1,63 @@
+name: CI - Validate and Test
+
+on:
+  pull_request:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  lint_test_build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # --- Frontend ---
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --watchAll=false
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      # --- Backend ---
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm run test
+
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint
+
+      # --- Terraform Validation ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init
+        working-directory: terraform/envs/dev
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: terraform/envs/dev
+        run: terraform validate
+
+      - name: Terraform fmt check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
