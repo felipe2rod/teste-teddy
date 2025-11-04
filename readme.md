@@ -35,8 +35,8 @@ Swagger
 
 Caso eu fosse fazer um painel administrativo nesse sistema, e partindo da premissa que é um painel administrativo apenas para controle dos usuários e seus clientes.
 Eu pediria 1 semana com os seguintes desenvolvedores:
-1 sênior full stack que será o pilar tecnico
-1 pleno backend
-1 pleno frontend
+- 1 sênior full stack que será o pilar tecnico
+- 1 pleno backend
+- 1 pleno frontend
 
 É muito para um sistema simples, mas é um tempo aceitavel de se negociar do ponto de vista de negocio, e poderiamos desenvolver com segurança, robustes, qualidade tecnica, e uma boa experiencia para o usuário, evitando dividas técnicas desde o inicio.
